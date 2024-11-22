@@ -192,9 +192,9 @@ class DBService(goods_store_pb2_grpc.DBServiceServicer):
             conn = connection_pool.getconn()
             cursor = conn.cursor()
 
-            # Query to fetch user by username
+            # Query to fetch user by username and check if they are active
             cursor.execute(
-                "SELECT sid, username, email, password_hash FROM users WHERE username = %s;",
+                "SELECT sid, username, email, password_hash, is_active FROM users WHERE username = %s;",
                 (request.username,)
             )
             user_row = cursor.fetchone()
@@ -203,6 +203,12 @@ class DBService(goods_store_pb2_grpc.DBServiceServicer):
             cursor.close()
 
             if user_row:
+                # Check if the user is active
+                if not user_row[4]:  # is_active is the 5th column (index 4)
+                    context.set_code(grpc.StatusCode.PERMISSION_DENIED)
+                    context.set_details("Account is deactivated")
+                    return goods_store_pb2.LoginResponse(error="Account is deactivated")
+
                 # Check if the provided password matches the hashed password in the database
                 if bcrypt.checkpw(request.password.encode(), user_row[3].encode()):
                     # Create JWT token
@@ -215,7 +221,6 @@ class DBService(goods_store_pb2_grpc.DBServiceServicer):
                     token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
                     return goods_store_pb2.LoginResponse(token=token)
-
                 else:
                     context.set_code(grpc.StatusCode.UNAUTHENTICATED)
                     context.set_details("Invalid credentials")
@@ -347,6 +352,71 @@ class DBService(goods_store_pb2_grpc.DBServiceServicer):
         finally:
             if conn:
                 # Return the connection back to the pool
+                connection_pool.putconn(conn)
+
+
+    def GetUserById(self, request, context):
+        conn = None
+        try:
+            # Get a connection from the pool
+            conn = connection_pool.getconn()
+            cursor = conn.cursor()
+
+            # Query to fetch a product by ID
+            cursor.execute(
+                "SELECT sid, username, email FROM users WHERE id = %s;",
+                (request.id,),
+            )
+            row = cursor.fetchone()
+            cursor.close()
+
+            if row:
+                # If the product is found, return it
+                return goods_store_pb2.UserInfo(
+                    sid=row[0],
+                    username=row[1],
+                    email=row[2],
+                )
+            else:
+                # If no product is found, return NOT_FOUND
+                context.set_code(grpc.StatusCode.NOT_FOUND)
+                context.set_details("Product not found")
+                return goods_store_pb2.UserInfo()
+
+        except Exception as e:
+            # Handle and log the exception
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(str(e))
+            return goods_store_pb2.UserInfo()
+        finally:
+            if conn:
+                # Return the connection back to the pool
+                connection_pool.putconn(conn)
+
+    def DeactivateUser(self, request, context):
+        conn = None
+        try:
+            conn = connection_pool.getconn()
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT sid FROM users WHERE sid = %s;",
+            (request.sid,))
+
+            row = cursor.fetchone()
+
+            if row:
+                cursor.execute(
+                    "UPDATE users SET is_active = FALSE WHERE sid=%s;",
+                    (request.sid,)
+                )
+                conn.commit()
+                return goods_store_pb2.Empty()
+            else:
+                context.set_code(grpc.StatusCode.NOT_FOUND)
+                context.set_details("User not found")
+                return goods_store_pb2.Empty()
+        finally:
+            if conn:
                 connection_pool.putconn(conn)
 
 

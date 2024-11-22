@@ -25,6 +25,10 @@ service DBService {
 
 
 }
+
+message deactivateRequest{
+  string sid = 1;
+}
 //request to update user info
 message UpdateUserRequest{
   string sid = 1;
@@ -43,9 +47,7 @@ message UserInfo {
 }
 
 //deactivate user
-message deactivateRequest{
-  string sid = 1;
-}
+
 
 
 //welcome response

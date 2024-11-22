@@ -127,6 +127,7 @@ def login():
 
 
 @app.route("/api/v1/users/update/<string:sid>", methods=["PUT"])
+@jwt_required
 def update_user(sid):
     data = request.json
     username = data.get('username', '')
@@ -153,6 +154,7 @@ def update_user(sid):
 
 
 @app.route("/api/v1/users", methods=["GET"])
+@jwt_required
 def get_users():
     try:
         # Call the gRPC method
@@ -188,6 +190,30 @@ def get_user_by_sid(sid):
             return jsonify({"error": "User not found"}), 404
         return jsonify({"error": "Internal server error"}), 500
 
+@app.route("/api/v1/users/id/<int:id>", methods=["GET"])
+def get_user_by_id(id):
+    try:
+        response = stub.GetUserById(goods_store_pb2.UserId(id=id))
+        user = {
+            "sid": response.sid,
+            "username": response.username,
+            "email": response.email,
+        }
+        return jsonify(user)
+    except grpc.RpcError as e:
+        if e.code() == grpc.StatusCode.NOT_FOUND:
+            return jsonify({"error": "User not found"}), 404
+        return jsonify({"error": "Internal server error"}), 500
+
+@app.route("/api/v1/users/deactivate/<string:sid>", methods=["PUT"])
+def deactivate_user(sid):
+    try:
+        deactivate_request = goods_store_pb2.deactivateRequest(sid=sid)
+
+        stub.DeactivateUser(deactivate_request)
+        return jsonify({'message': f'user with sid{sid} has been deactivated'}), 200
+    except grpc.RpcError as e:
+        return jsonify({'error': f"gRPC error: {e.details()}"}), e.code().value[0]
 
 if __name__ == "__main__":
     app.run(port=8080)
