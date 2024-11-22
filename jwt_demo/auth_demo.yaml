@@ -1,0 +1,109 @@
+openapi: 3.0.1
+info:
+  title: Example JWT-Protected API
+  description: A simple API to demonstrate JWT authentication with Swagger UI
+  version: 1.0.0
+
+# OpenAPI Spec: https://swagger.io/specification/
+# Bearer Auth: https://swagger.io/docs/specification/v3_0/authentication/bearer-authentication/
+# OpenAPI Generator Example: https://github.com/spec-first/connexion/tree/main/examples/jwt
+
+paths:
+  /register:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        201:
+          description: User registered successfully
+        400:
+          description: Registration failed
+
+  /login:
+    post:
+      summary: Authenticate and get a JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        200:
+          description: Successfully authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        401:
+          description: Unauthorized
+        404:
+          description: Unauthorized
+
+  /protected:
+    get:
+      summary: Access protected data
+      # specify that this request requires a JWT token
+      security:
+        - BearerAuth: []  # use the same name as below
+      responses:
+        200:
+          description: Protected data response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtectedData'
+        401:
+          description: Unauthorized - missing or invalid JWT
+
+components:
+  securitySchemes:
+    BearerAuth:   # arbitrary name for the security scheme
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RegisterRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+          description: a password field
+      required:
+        - username
+        - password
+
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+          description: a password field
+      required:
+        - username
+        - password
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT token passed back to the client
+
+    ProtectedData:
+      type: object
+      properties:
+        message:
+          type: string

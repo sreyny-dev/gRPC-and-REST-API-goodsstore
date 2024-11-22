@@ -1,0 +1,125 @@
+openapi: 3.0.1
+info:
+  description: A simple API to demonstrate JWT authentication with Swagger UI
+  title: Example JWT-Protected API
+  version: 1.0.0
+servers:
+- url: /
+paths:
+  /login:
+    post:
+      operationId: login_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+          description: Successfully authenticated
+        "401":
+          description: Unauthorized
+        "404":
+          description: Unauthorized
+      summary: Authenticate and get a JWT token
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /protected:
+    get:
+      operationId: protected_get
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtectedData'
+          description: Protected data response
+        "401":
+          description: Unauthorized - missing or invalid JWT
+      security:
+      - BearerAuth: []
+      summary: Access protected data
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /register:
+    post:
+      operationId: register_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      responses:
+        "201":
+          description: User registered successfully
+        "400":
+          description: Registration failed
+      summary: Register a new user
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+components:
+  schemas:
+    RegisterRequest:
+      example:
+        password: password
+        username: username
+      properties:
+        username:
+          title: username
+          type: string
+        password:
+          description: a password field
+          format: password
+          title: password
+          type: string
+      required:
+      - password
+      - username
+      title: RegisterRequest
+      type: object
+    LoginRequest:
+      example:
+        password: password
+        username: username
+      properties:
+        username:
+          title: username
+          type: string
+        password:
+          description: a password field
+          format: password
+          title: password
+          type: string
+      required:
+      - password
+      - username
+      title: LoginRequest
+      type: object
+    LoginResponse:
+      example:
+        token: token
+      properties:
+        token:
+          description: JWT token passed back to the client
+          title: token
+          type: string
+      title: LoginResponse
+      type: object
+    ProtectedData:
+      example:
+        message: message
+      properties:
+        message:
+          title: message
+          type: string
+      title: ProtectedData
+      type: object
+  securitySchemes:
+    BearerAuth:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http
+      x-bearerInfoFunc: openapi_server.controllers.security_controller.info_from_BearerAuth

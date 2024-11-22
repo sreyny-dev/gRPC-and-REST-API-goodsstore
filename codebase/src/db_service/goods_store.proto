@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package goodsstore;
+
+service DBService {
+  rpc Welcome(Empty) returns (WelcomeResponse);
+  rpc GetProducts (Empty) returns (ProductListResponse);
+  rpc GetProductById (ProductId) returns (ProductResponse);
+  rpc CreateUser (CreateUserRequest) returns (UserInfo);
+  rpc Login (LoginRequest) returns (LoginResponse); // New RPC for login
+  rpc UpdateUser (UpdateUserRequest) returns (UserInfo);
+}
+
+//request to update user info
+message UpdateUserRequest{
+  string sid = 1;
+  string username = 2;
+  string email = 3;
+}
+
+//welcome response
+message WelcomeResponse{
+  string message = 1;
+}
+
+// Request message for login
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+// Response message for login
+message LoginResponse {
+  string token = 1; // JWT token for authenticated user
+  string error = 2; // Error message if authentication fails
+}
+
+// Existing messages
+message ProductListResponse {
+  repeated ProductResponse products = 1;
+}
+
+message ProductResponse {
+  int32 id = 1;
+  string name = 2;
+  string description = 3;
+  string category = 4;
+  float price = 5;
+  string slogan = 6;
+  int32 stock = 7;
+}
+
+message ProductId {
+  int32 id = 1;
+}
+
+message CreateUserRequest {
+  string sid = 1;
+  string username = 2;
+  string email = 3;
+  string password = 4;
+}
+
+message UserInfo {
+  string sid = 1;
+  string username = 2;
+  string email = 3;
+}
+
+message Empty {}
+

@@ -1,0 +1,60 @@
+# https://docs.docker.com/reference/compose-file/
+services:
+  # database for persistant data storage
+  postgres:
+    # https://hub.docker.com/_/postgres
+    image: postgres:17
+    container_name: postgres
+    hostname: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "1111:5432"   # Expose PostgreSQL to localhost ("local:container")
+    volumes:
+      - pg_data:/var/lib/postgresql/data        # default PGDATA location: /var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d   # init run all scripts by default in: /docker-entrypoint-initdb.d
+
+  # kafka message queue with zookeeper config management
+  zookeeper:
+    # https://hub.docker.com/r/confluentinc/cp-zookeeper
+    image: confluentinc/cp-zookeeper:7.7.1
+    container_name: zookeeper
+    hostname: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    # https://hub.docker.com/r/confluentinc/cp-kafka
+    image: confluentinc/cp-kafka:7.7.1
+    container_name: kafka
+    hostname: kafka
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9092,OUTSIDE://localhost:9092
+      KAFKA_LISTENERS: INSIDE://0.0.0.0:9092,OUTSIDE://0.0.0.0:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"  # For internal Docker use
+      - "9093:9093"  # For external access
+
+
+  kafka-topic-creator:
+    image: confluentinc/cp-kafka:7.7.1
+    depends_on:
+      - kafka
+    entrypoint: >
+      bash -c "
+      /bin/kafka-topics --create --topic log-channel --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1;
+      "
+
+volumes:
+  pg_data:  # A placeholder volume without any configuration
+
