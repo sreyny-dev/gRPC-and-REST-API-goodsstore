@@ -1,52 +1,9 @@
-# import psycopg2
-# from psycopg2 import pool   # this line is oddly necessary
-# from pprint import pprint
-#
 """
 Connection pooling: https://www.psycopg.org/docs/pool.html
 Connection: https://www.psycopg.org/docs/connection.html
 Cursor: https://www.psycopg.org/docs/cursor.html
 """
 import datetime
-
-#
-# # Create a SimpleConnectionPool for a single-threaded application
-# simple_pool = psycopg2.pool.SimpleConnectionPool(
-#   minconn=1,
-#   maxconn=10,
-#   user="dncc",
-#   # maybe password need to be read from environment variable for security issue
-#   password="dncc",
-#   host="localhost",
-#   port="5432",
-#   database="goodsstore"
-# )
-#
-# # Single-threaded usage of connections
-# try:
-#   # Get a connection from the pool
-#   conn = simple_pool.getconn()
-#
-#   # Perform a database operation
-#   with conn.cursor() as cursor:
-#     cursor.execute("SELECT * FROM products;")
-#     results = cursor.fetchall()
-#     pprint(results)
-#     # Commit only for INSERT/UPDATE/DELETE operations.
-#     # cursor.execute("INSERT INTO products (name, stock, price) VALUES (%s, %s, %s) RETURNING id", ("SUSTech Pixel Map", 300, 3.99))
-#     # results = cursor.fetchone()
-#     # pprint(results)
-#     # conn.commit()
-#     # Rollback when sth is wrong.
-#     # conn.rollback()
-# finally:
-#   # Return the connection to the pool
-#   simple_pool.putconn(conn)
-#
-# # Closing all connections in the pool
-# simple_pool.closeall()
-
-
 import grpc
 from concurrent import futures
 
@@ -119,7 +76,8 @@ class DBService(goods_store_pb2_grpc.DBServiceServicer):
             cursor.execute("SELECT id, name, description, category, price, slogan, stock FROM products;")
             products = [
                 goods_store_pb2.ProductResponse(
-                    id=row[0], name=row[1], description=row[2], category=row[3], price=row[4], slogan=row[5], stock=row[6]
+                    id=row[0], name=row[1], description=row[2], category=row[3], price=row[4], slogan=row[5],
+                    stock=row[6]
                 )
                 for row in cursor.fetchall()
             ]
@@ -197,6 +155,7 @@ class DBService(goods_store_pb2_grpc.DBServiceServicer):
             VALUES (%s, %s, %s, %s)
             RETURNING sid, username, email
             """
+
             password_hash = bcrypt.hashpw(request.password.encode(), bcrypt.gensalt()).decode()
 
             cursor.execute(
@@ -272,6 +231,119 @@ class DBService(goods_store_pb2_grpc.DBServiceServicer):
             context.set_code(grpc.StatusCode.INTERNAL)
             context.set_details(f"Internal server error: {str(e)}")
             return goods_store_pb2.LoginResponse(error="Internal server error")
+        finally:
+            if conn:
+                # Return the connection back to the pool
+                connection_pool.putconn(conn)
+
+    # Update UserName by SID
+    def UpdateUser(self, request, context):
+        print(f"Received UpdateUser request: sid={request.sid}, username={request.username}")
+        conn = None
+
+        try:
+            conn = connection_pool.getconn()
+            cursor = conn.cursor()
+
+            # Check if the user exists
+            cursor.execute("SELECT sid FROM users WHERE sid = %s;", (request.sid,))
+            row = cursor.fetchone()
+
+            if row:
+                print(f"User with sid {request.sid} found. Updating username...")
+                # Update the username
+                cursor.execute(
+                    "UPDATE users SET username = %s WHERE sid = %s;",
+                    (request.username, request.sid)
+                )
+                conn.commit()
+
+                # Fetch the updated user details
+                cursor.execute("SELECT sid, username, email FROM users WHERE sid = %s;", (request.sid,))
+                updated_row = cursor.fetchone()
+
+                return goods_store_pb2.UserInfo(
+                    sid=updated_row[0],
+                    username=updated_row[1],
+                    email=updated_row[2]
+                )
+            else:
+                print(f"User with sid {request.sid} not found.")
+                context.set_code(grpc.StatusCode.NOT_FOUND)
+                context.set_details("User not found")
+                return goods_store_pb2.UserInfo()
+
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            print(f"Error occurred: {e}")
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(f"Error occurred: {str(e)}")
+            return goods_store_pb2.UserInfo()
+
+        finally:
+            if conn:
+                connection_pool.putconn(conn)
+
+    def GetAllUsers(self, request, context):
+        conn = None
+        try:
+            conn = connection_pool.getconn()
+            cursor = conn.cursor()
+
+            # Query to fetch all users
+            cursor.execute("SELECT sid, username, email FROM users;")
+            userList = [
+                goods_store_pb2.UserInfo(
+                    sid=row[0], username=row[1], email=row[2]
+                )
+                for row in cursor.fetchall()
+            ]
+            cursor.close()
+            return goods_store_pb2.UserResponseList(userList=userList)
+
+        except Exception as e:
+            # Handle and log the exception
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(str(e))
+            return goods_store_pb2.UserResponseList()
+        finally:
+            if conn:
+                connection_pool.putconn(conn)
+
+    def GetUserBySid(self, request, context):
+        conn = None
+        try:
+            # Get a connection from the pool
+            conn = connection_pool.getconn()
+            cursor = conn.cursor()
+
+            # Query to fetch a product by ID
+            cursor.execute(
+                "SELECT sid, username, email FROM users WHERE sid = %s;",
+                (request.sid,),
+            )
+            row = cursor.fetchone()
+            cursor.close()
+
+            if row:
+                # If the product is found, return it
+                return goods_store_pb2.UserInfo(
+                    sid=row[0],
+                    username=row[1],
+                    email=row[2],
+                )
+            else:
+                # If no product is found, return NOT_FOUND
+                context.set_code(grpc.StatusCode.NOT_FOUND)
+                context.set_details("Product not found")
+                return goods_store_pb2.UserInfo()
+
+        except Exception as e:
+            # Handle and log the exception
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(str(e))
+            return goods_store_pb2.UserInfo()
         finally:
             if conn:
                 # Return the connection back to the pool

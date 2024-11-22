@@ -64,6 +64,26 @@ class DBServiceStub(object):
                 request_serializer=goods__store__pb2.UpdateUserRequest.SerializeToString,
                 response_deserializer=goods__store__pb2.UserInfo.FromString,
                 _registered_method=True)
+        self.GetAllUsers = channel.unary_unary(
+                '/goodsstore.DBService/GetAllUsers',
+                request_serializer=goods__store__pb2.Empty.SerializeToString,
+                response_deserializer=goods__store__pb2.UserResponseList.FromString,
+                _registered_method=True)
+        self.DeactivateUser = channel.unary_unary(
+                '/goodsstore.DBService/DeactivateUser',
+                request_serializer=goods__store__pb2.deactivateRequest.SerializeToString,
+                response_deserializer=goods__store__pb2.Empty.FromString,
+                _registered_method=True)
+        self.GetUserById = channel.unary_unary(
+                '/goodsstore.DBService/GetUserById',
+                request_serializer=goods__store__pb2.UserId.SerializeToString,
+                response_deserializer=goods__store__pb2.UserInfo.FromString,
+                _registered_method=True)
+        self.GetUserBySid = channel.unary_unary(
+                '/goodsstore.DBService/GetUserBySid',
+                request_serializer=goods__store__pb2.UserSid.SerializeToString,
+                response_deserializer=goods__store__pb2.UserInfo.FromString,
+                _registered_method=True)
 
 
 class DBServiceServicer(object):
@@ -76,7 +96,8 @@ class DBServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def GetProducts(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """for Products
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -88,7 +109,8 @@ class DBServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def CreateUser(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """for USERS
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -101,6 +123,30 @@ class DBServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def UpdateUser(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetAllUsers(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DeactivateUser(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetUserById(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetUserBySid(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -137,6 +183,26 @@ def add_DBServiceServicer_to_server(servicer, server):
             'UpdateUser': grpc.unary_unary_rpc_method_handler(
                     servicer.UpdateUser,
                     request_deserializer=goods__store__pb2.UpdateUserRequest.FromString,
+                    response_serializer=goods__store__pb2.UserInfo.SerializeToString,
+            ),
+            'GetAllUsers': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetAllUsers,
+                    request_deserializer=goods__store__pb2.Empty.FromString,
+                    response_serializer=goods__store__pb2.UserResponseList.SerializeToString,
+            ),
+            'DeactivateUser': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeactivateUser,
+                    request_deserializer=goods__store__pb2.deactivateRequest.FromString,
+                    response_serializer=goods__store__pb2.Empty.SerializeToString,
+            ),
+            'GetUserById': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetUserById,
+                    request_deserializer=goods__store__pb2.UserId.FromString,
+                    response_serializer=goods__store__pb2.UserInfo.SerializeToString,
+            ),
+            'GetUserBySid': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetUserBySid,
+                    request_deserializer=goods__store__pb2.UserSid.FromString,
                     response_serializer=goods__store__pb2.UserInfo.SerializeToString,
             ),
     }
@@ -301,6 +367,114 @@ class DBService(object):
             target,
             '/goodsstore.DBService/UpdateUser',
             goods__store__pb2.UpdateUserRequest.SerializeToString,
+            goods__store__pb2.UserInfo.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetAllUsers(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/goodsstore.DBService/GetAllUsers',
+            goods__store__pb2.Empty.SerializeToString,
+            goods__store__pb2.UserResponseList.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DeactivateUser(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/goodsstore.DBService/DeactivateUser',
+            goods__store__pb2.deactivateRequest.SerializeToString,
+            goods__store__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetUserById(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/goodsstore.DBService/GetUserById',
+            goods__store__pb2.UserId.SerializeToString,
+            goods__store__pb2.UserInfo.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetUserBySid(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/goodsstore.DBService/GetUserBySid',
+            goods__store__pb2.UserSid.SerializeToString,
             goods__store__pb2.UserInfo.FromString,
             options,
             channel_credentials,

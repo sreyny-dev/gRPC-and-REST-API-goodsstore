@@ -4,19 +4,49 @@ package goodsstore;
 
 service DBService {
   rpc Welcome(Empty) returns (WelcomeResponse);
+
+
+  //for Products
   rpc GetProducts (Empty) returns (ProductListResponse);
   rpc GetProductById (ProductId) returns (ProductResponse);
+
+
+  //for USERS
   rpc CreateUser (CreateUserRequest) returns (UserInfo);
   rpc Login (LoginRequest) returns (LoginResponse); // New RPC for login
   rpc UpdateUser (UpdateUserRequest) returns (UserInfo);
-}
+  rpc GetAllUsers (Empty) returns (UserResponseList);
+  rpc DeactivateUser(deactivateRequest) returns (Empty);
+  rpc GetUserById(UserId) returns (UserInfo);
+  rpc GetUserBySid(UserSid) returns (UserInfo);
 
+  //for orders
+
+
+
+}
 //request to update user info
 message UpdateUserRequest{
   string sid = 1;
   string username = 2;
+}
+
+
+//get users
+message UserResponseList{
+  repeated UserInfo userList = 1;
+}
+message UserInfo {
+  string sid = 1;
+  string username = 2;
   string email = 3;
 }
+
+//deactivate user
+message deactivateRequest{
+  string sid = 1;
+}
+
 
 //welcome response
 message WelcomeResponse{
@@ -40,6 +70,8 @@ message ProductListResponse {
   repeated ProductResponse products = 1;
 }
 
+
+
 message ProductResponse {
   int32 id = 1;
   string name = 2;
@@ -54,6 +86,14 @@ message ProductId {
   int32 id = 1;
 }
 
+message UserId{
+  int32 id =1;
+}
+
+message UserSid{
+  string sid = 1;
+}
+
 message CreateUserRequest {
   string sid = 1;
   string username = 2;
@@ -61,11 +101,6 @@ message CreateUserRequest {
   string password = 4;
 }
 
-message UserInfo {
-  string sid = 1;
-  string username = 2;
-  string email = 3;
-}
 
 message Empty {}
 
