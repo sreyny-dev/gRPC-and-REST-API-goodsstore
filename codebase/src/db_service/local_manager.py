@@ -462,6 +462,83 @@ class DBService(goods_store_pb2_grpc.DBServiceServicer):
             context.set_details(f"Internal server error: {str(e)}")
             return goods_store_pb2.ProductResponse()
 
+    def UpdateProduct(self, request, context):
+        conn = None
+        try:
+            conn = connection_pool.getconn()
+            cursor = conn.cursor()
+
+            # Start building the update query
+            update_fields = []
+            values = []
+
+            # Check which fields are provided and build the update statement accordingly
+            if request.name:
+                update_fields.append("name = %s")
+                values.append(request.name)
+            if request.description:
+                update_fields.append("description = %s")
+                values.append(request.description)
+            if request.category:
+                update_fields.append("category = %s")
+                values.append(request.category)
+            if request.price >= 0:  # Assuming price can be 0, check if it's provided
+                update_fields.append("price = %s")
+                values.append(request.price)
+            if request.slogan:
+                update_fields.append("slogan = %s")
+                values.append(request.slogan)
+            if request.stock >= 0:  # Assuming stock can be 0, check if it's provided
+                update_fields.append("stock = %s")
+                values.append(request.stock)
+
+            # If no fields are provided, return an error
+            if not update_fields:
+                context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+                context.set_details("No fields to update")
+                return goods_store_pb2.ProductResponse()
+
+            # Combine the update fields into the SQL statement
+            update_query = f"""
+                UPDATE products
+                SET {', '.join(update_fields)}
+                WHERE id = %s
+                RETURNING id, name, description, category, price, slogan, stock
+            """
+
+            # Add product ID to the values for the WHERE clause
+            values.append(request.id)
+
+            # Execute the update query
+            cursor.execute(update_query, values)
+            product_row = cursor.fetchone()
+            conn.commit()
+
+            if product_row:
+                return goods_store_pb2.ProductResponse(
+                    id=product_row[0],
+                    name=product_row[1],
+                    description=product_row[2],
+                    category=product_row[3],
+                    price=round(product_row[4], 2),
+                    slogan=product_row[5],
+                    stock=product_row[6]
+                )
+            else:
+                context.set_code(grpc.StatusCode.NOT_FOUND)
+                context.set_details("Product not found")
+                return goods_store_pb2.ProductResponse()
+
+        except Exception as e:
+            if conn:
+                connection_pool.putconn(conn)
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(f"Internal server error: {str(e)}")
+            return goods_store_pb2.ProductResponse()
+        finally:
+            if conn:
+                connection_pool.putconn(conn)
+
 
 # Start the gRPC server
 def serve():

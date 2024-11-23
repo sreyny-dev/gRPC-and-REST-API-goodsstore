@@ -9,6 +9,7 @@ service DBService {
   rpc GetProducts (Empty) returns (ProductListResponse);
   rpc GetProductById (ProductId) returns (ProductResponse);
   rpc CreateProduct (CreateProductRequest) returns (ProductResponse);
+  rpc UpdateProduct (UpdateProductRequest) returns (ProductResponse);
 
   //for USERS
   rpc CreateUser (CreateUserRequest) returns (UserInfo);
@@ -24,6 +25,16 @@ service DBService {
 
 }
 
+message UpdateProductRequest{
+  int32 id = 1;
+  string name = 2;
+  string description = 3;
+  string category = 4;
+  double price = 5;
+  string slogan = 6;
+  int32 stock = 7;
+}
+
 message CreateProductRequest{
   string name = 1;
   string description = 2;
@@ -32,7 +43,6 @@ message CreateProductRequest{
   string slogan = 5;
   int32 stock = 6;
 }
-
 
 
 message deactivateRequest{

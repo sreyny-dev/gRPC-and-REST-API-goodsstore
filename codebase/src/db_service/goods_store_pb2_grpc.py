@@ -54,6 +54,11 @@ class DBServiceStub(object):
                 request_serializer=goods__store__pb2.CreateProductRequest.SerializeToString,
                 response_deserializer=goods__store__pb2.ProductResponse.FromString,
                 _registered_method=True)
+        self.UpdateProduct = channel.unary_unary(
+                '/goodsstore.DBService/UpdateProduct',
+                request_serializer=goods__store__pb2.UpdateProductRequest.SerializeToString,
+                response_deserializer=goods__store__pb2.ProductResponse.FromString,
+                _registered_method=True)
         self.CreateUser = channel.unary_unary(
                 '/goodsstore.DBService/CreateUser',
                 request_serializer=goods__store__pb2.CreateUserRequest.SerializeToString,
@@ -114,6 +119,12 @@ class DBServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def CreateProduct(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UpdateProduct(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -184,6 +195,11 @@ def add_DBServiceServicer_to_server(servicer, server):
             'CreateProduct': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateProduct,
                     request_deserializer=goods__store__pb2.CreateProductRequest.FromString,
+                    response_serializer=goods__store__pb2.ProductResponse.SerializeToString,
+            ),
+            'UpdateProduct': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateProduct,
+                    request_deserializer=goods__store__pb2.UpdateProductRequest.FromString,
                     response_serializer=goods__store__pb2.ProductResponse.SerializeToString,
             ),
             'CreateUser': grpc.unary_unary_rpc_method_handler(
@@ -329,6 +345,33 @@ class DBService(object):
             target,
             '/goodsstore.DBService/CreateProduct',
             goods__store__pb2.CreateProductRequest.SerializeToString,
+            goods__store__pb2.ProductResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def UpdateProduct(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/goodsstore.DBService/UpdateProduct',
+            goods__store__pb2.UpdateProductRequest.SerializeToString,
             goods__store__pb2.ProductResponse.FromString,
             options,
             channel_credentials,

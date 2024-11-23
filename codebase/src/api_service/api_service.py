@@ -34,7 +34,7 @@ def get_products():
                 "name": product.name,
                 "description": product.description,
                 "category": product.category,
-                "price": product.price,
+                "price": round(product.price, 2),
                 "slogan": product.slogan,
                 "stock": product.stock,
             }
@@ -56,7 +56,7 @@ def get_product_by_id(product_id):
             "name": response.name,
             "description": response.description,
             "category": response.category,
-            "price": response.price,
+            "price": round(response.price, 2),
             "stock": response.stock,
         }
         return jsonify(product)
@@ -176,6 +176,7 @@ def get_users():
         return jsonify({"error": "Internal server error"}), 500
 
 @app.route("/api/v1/users/<string:sid>", methods=["GET"])
+@jwt_required
 def get_user_by_sid(sid):
     try:
         response = stub.GetUserBySid(goods_store_pb2.UserSid(sid=sid))
@@ -191,6 +192,7 @@ def get_user_by_sid(sid):
         return jsonify({"error": "Internal server error"}), 500
 
 @app.route("/api/v1/users/id/<int:id>", methods=["GET"])
+@jwt_required
 def get_user_by_id(id):
     try:
         response = stub.GetUserById(goods_store_pb2.UserId(id=id))
@@ -206,6 +208,7 @@ def get_user_by_id(id):
         return jsonify({"error": "Internal server error"}), 500
 
 @app.route("/api/v1/users/deactivate/<string:sid>", methods=["PUT"])
+@jwt_required
 def deactivate_user(sid):
     try:
         deactivate_request = goods_store_pb2.deactivateRequest(sid=sid)
@@ -239,7 +242,7 @@ def create_product():
                 'name': grpc_response.name,
                 'description': grpc_response.description,
                 'category': grpc_response.category,
-                'price': grpc_response.price,
+                'price': round(grpc_response.price, 2),
                 'slogan': grpc_response.slogan,
                 'stock': grpc_response.stock
             }), 201
@@ -250,6 +253,57 @@ def create_product():
         return jsonify({'error': e.details()}), e.code().value[0]
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@app.route("/api/v1/products/update/<int:product_id>", methods=["PUT"])
+@jwt_required
+def update_product(product_id):
+    data = request.json
+
+    # Initialize the fields to update
+    update_fields = {}
+
+    # Collect fields from the request
+    if 'name' in data:
+        update_fields['name'] = data['name']
+    if 'description' in data:
+        update_fields['description'] = data['description']
+    if 'category' in data:
+        update_fields['category'] = data['category']
+    if 'price' in data:
+        update_fields['price'] = data['price']
+    if 'slogan' in data:
+        update_fields['slogan'] = data['slogan']
+    if 'stock' in data:
+        update_fields['stock'] = data['stock']
+
+    # Check if there are no fields to update
+    if not update_fields:
+        return jsonify({'error': 'No fields provided to update'}), 400
+
+    # Construct the gRPC request with the product ID
+    update_request = goods_store_pb2.UpdateProductRequest(
+        id=product_id,
+        **update_fields  # Unpack dictionary to pass as keyword arguments
+    )
+
+    try:
+        # Call the gRPC UpdateProduct method
+        updated_product = stub.UpdateProduct(update_request)
+
+        return jsonify({
+            'id': updated_product.id,
+            'name': updated_product.name,
+            'description': updated_product.description,
+            'category': updated_product.category,
+            'price': round(updated_product.price, 2),
+            'slogan': updated_product.slogan,
+            'stock': updated_product.stock
+        }), 200
+    except grpc.RpcError as e:
+        return jsonify({'error': f"gRPC error: {e.details()}"}), e.code().value[0]
+
+
 
 
 if __name__ == "__main__":
