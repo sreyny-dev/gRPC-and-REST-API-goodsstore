@@ -99,6 +99,21 @@ class DBServiceStub(object):
                 request_serializer=goods__store__pb2.OrderRequest.SerializeToString,
                 response_deserializer=goods__store__pb2.OrderResponse.FromString,
                 _registered_method=True)
+        self.GetOrderById = channel.unary_unary(
+                '/goodsstore.DBService/GetOrderById',
+                request_serializer=goods__store__pb2.OrderId.SerializeToString,
+                response_deserializer=goods__store__pb2.OrderResponse.FromString,
+                _registered_method=True)
+        self.GetAllOrder = channel.unary_unary(
+                '/goodsstore.DBService/GetAllOrder',
+                request_serializer=goods__store__pb2.Empty.SerializeToString,
+                response_deserializer=goods__store__pb2.OrderResponseList.FromString,
+                _registered_method=True)
+        self.GetOrderByUser = channel.unary_unary(
+                '/goodsstore.DBService/GetOrderByUser',
+                request_serializer=goods__store__pb2.UserId.SerializeToString,
+                response_deserializer=goods__store__pb2.OrderResponseList.FromString,
+                _registered_method=True)
 
 
 class DBServiceServicer(object):
@@ -186,6 +201,24 @@ class DBServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetOrderById(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetAllOrder(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetOrderByUser(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_DBServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -253,6 +286,21 @@ def add_DBServiceServicer_to_server(servicer, server):
                     servicer.PlaceOrder,
                     request_deserializer=goods__store__pb2.OrderRequest.FromString,
                     response_serializer=goods__store__pb2.OrderResponse.SerializeToString,
+            ),
+            'GetOrderById': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetOrderById,
+                    request_deserializer=goods__store__pb2.OrderId.FromString,
+                    response_serializer=goods__store__pb2.OrderResponse.SerializeToString,
+            ),
+            'GetAllOrder': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetAllOrder,
+                    request_deserializer=goods__store__pb2.Empty.FromString,
+                    response_serializer=goods__store__pb2.OrderResponseList.SerializeToString,
+            ),
+            'GetOrderByUser': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetOrderByUser,
+                    request_deserializer=goods__store__pb2.UserId.FromString,
+                    response_serializer=goods__store__pb2.OrderResponseList.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -606,6 +654,87 @@ class DBService(object):
             '/goodsstore.DBService/PlaceOrder',
             goods__store__pb2.OrderRequest.SerializeToString,
             goods__store__pb2.OrderResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetOrderById(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/goodsstore.DBService/GetOrderById',
+            goods__store__pb2.OrderId.SerializeToString,
+            goods__store__pb2.OrderResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetAllOrder(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/goodsstore.DBService/GetAllOrder',
+            goods__store__pb2.Empty.SerializeToString,
+            goods__store__pb2.OrderResponseList.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetOrderByUser(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/goodsstore.DBService/GetOrderByUser',
+            goods__store__pb2.UserId.SerializeToString,
+            goods__store__pb2.OrderResponseList.FromString,
             options,
             channel_credentials,
             insecure,

@@ -52,7 +52,7 @@ def jwt_required(f):
         try:
             # Decode and verify the token
             payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-            # You can add the user details in the request context if needed
+            # verity token, add the user details in the request context if needed
             request.user = payload
         except jwt.ExpiredSignatureError:
             raise Unauthorized("Token has expired!")
@@ -596,6 +596,102 @@ class DBService(goods_store_pb2_grpc.DBServiceServicer):
             if conn:
                 connection_pool.putconn(conn)
 
+    def GetAllOrder(self, request, context):
+        conn = None
+        try:
+            conn = connection_pool.getconn()
+            cursor = conn.cursor()
+
+            # Fetch all orders from the database
+            cursor.execute("SELECT id, user_id, product_id, quantity, total_price FROM orders")
+            orders = cursor.fetchall()
+
+            # Create a list of OrderResponse messages
+            order_list = []
+            for order in orders:
+                order_response = goods_store_pb2.OrderResponse(
+                    order_id=order[0],
+                    user_id=order[1],
+                    product_id=order[2],
+                    quantity=order[3],
+                    total_price=order[4]
+                )
+                order_list.append(order_response)
+
+            return goods_store_pb2.OrderResponseList(order_list=order_list)
+
+        except Exception as e:
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(f"Internal server error: {str(e)}")
+            return goods_store_pb2.OrderResponseList()
+        finally:
+            if conn:
+                connection_pool.putconn(conn)
+
+    def GetOrderById(self, request, context):
+        conn = None
+        try:
+            conn = connection_pool.getconn()
+            cursor = conn.cursor()
+
+            cursor.execute(
+                "SELECT id, user_id, product_id, quantity, total_price FROM orders WHERE id = %s;",
+                (request.id,)
+            )
+
+            row = cursor.fetchone()
+            cursor.close()
+
+            if row:
+                return goods_store_pb2.OrderResponse(
+                    order_id=row[0],
+                    user_id=row[1],
+                    product_id=row[2],
+                    quantity=row[3],
+                    total_price=row[4]
+                )
+            else:
+                context.set_code(grpc.StatusCode.NOT_FOUND)
+                context.set_details("Order Not Found")
+                return goods_store_pb2.OrderResponse()
+        except Exception as e:
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(str(e))
+            return goods_store_pb2.OrderResponse()
+        finally:
+            if conn:
+                connection_pool.putconn(conn)
+
+    def GetOrderByUser(self, request, context):
+        conn = None
+        try:
+            conn = connection_pool.getconn()
+            cursor = conn.cursor()
+
+            cursor.execute(
+                "SELECT id, user_id, product_id, quantity, total_price FROM orders WHERE user_id = %s;",
+                (request.id,))
+
+            orders = cursor.fetchall()
+            order_list = []
+            for order in orders:
+                order_response = goods_store_pb2.OrderResponse(
+                    order_id=order[0],
+                    user_id=order[1],
+                    product_id=order[2],
+                    quantity=order[3],
+                    total_price=order[4]
+                )
+                order_list.append(order_response)
+            cursor.close()
+            return goods_store_pb2.OrderResponseList(order_list=order_list)
+        except Exception as e:
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(f"Internal server error: {str(e)}")
+            return goods_store_pb2.OrderResponseList()
+        finally:
+            if conn:
+                connection_pool.putconn(conn)
 
 
 # Start the gRPC server

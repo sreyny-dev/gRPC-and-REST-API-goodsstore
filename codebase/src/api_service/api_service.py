@@ -339,5 +339,73 @@ def place_order():
     except grpc.RpcError as e:
         return jsonify({'error': f"gRPC error: {e.details()}"}), e.code().value[0]
 
+
+@app.route("/api/v1/orders", methods=["GET"])
+@jwt_required
+def get_all_orders():
+    # Construct the gRPC request
+    empty_request = goods_store_pb2.Empty()
+
+    try:
+        # Call the gRPC GetAllOrder method
+        order_response_list = stub.GetAllOrder(empty_request)
+
+        # Convert the order response to a JSON format
+        orders = [{
+            'order_id': order.order_id,
+            'user_id': order.user_id,
+            'product_id': order.product_id,
+            'quantity': order.quantity,
+            'total_price': order.total_price
+        } for order in order_response_list.order_list]
+
+        return jsonify(orders), 200
+
+    except grpc.RpcError as e:
+        return jsonify({'error': f"gRPC error: {e.details()}"}), e.code().value[0]
+
+
+@app.route("/api/v1/orders/id/<int:id>", methods=["GET"])
+@jwt_required
+def get_order_by_id(id):
+    try:
+        order_id_request = goods_store_pb2.OrderId(id=id)
+        response = stub.GetOrderById(order_id_request)
+        order = {
+            "order_id": response.order_id,
+            "user_id": response.user_id,
+            "product_id": response.product_id,
+            "quantity": response.quantity,
+            "total_price": response.total_price
+        }
+        return jsonify(order), 200
+    except grpc.RpcError as e:
+        if e.code() == grpc.StatusCode.NOT_FOUND:
+            return jsonify({"error": "Order not found"}), 404
+        return jsonify({"error": "Internal Server Error"}), 500
+
+@app.route("/api/v1/orders/user_id/<int:user_id>", methods = ["GET"])
+@jwt_required
+def get_order_by_user_id(user_id):
+    try:
+        user_request = goods_store_pb2.UserId(id=user_id)
+        order_response_list = stub.GetOrderByUser(user_request)
+
+        orders = [{
+            'order_id': order.order_id,
+            'user_id': order.user_id,
+            'product_id': order.product_id,
+            'quantity': order.quantity,
+            'total_price': order.total_price
+        } for order in order_response_list.order_list]
+
+        return jsonify(orders), 200
+
+    except grpc.RpcError as e:
+        if e.code() == grpc.StatusCode.NOT_FOUND:
+            return jsonify({"error": "Order not found"}), 404
+        return jsonify({"error": "Internal Server Error"}), 500
+
+
 if __name__ == "__main__":
     app.run(port=8080)

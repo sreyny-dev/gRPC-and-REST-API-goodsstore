@@ -22,15 +22,12 @@ service DBService {
 
   //for orders
   rpc PlaceOrder(OrderRequest) returns (OrderResponse);
-
+  rpc GetOrderById(OrderId) returns (OrderResponse);
+  rpc GetAllOrder(Empty) returns (OrderResponseList);
+  rpc GetOrderByUser(UserId) returns (OrderResponseList);
 
 }
 
-message OrderRequest{
-  int32 user_id = 1;
-  int32 product_id = 2;
-  int32 quantity = 3;
-}
 
 message OrderResponse{
   int32  order_id = 1;
@@ -40,6 +37,22 @@ message OrderResponse{
   double total_price = 5;
 
 }
+
+message OrderId{
+  int32 id = 1;
+}
+
+
+message OrderResponseList{
+  repeated OrderResponse order_list = 1;
+}
+
+message OrderRequest{
+  int32 user_id = 1;
+  int32 product_id = 2;
+  int32 quantity = 3;
+}
+
 
 
 message UpdateProductRequest{
@@ -81,10 +94,6 @@ message UserInfo {
   string username = 2;
   string email = 3;
 }
-
-//deactivate user
-
-
 
 //welcome response
 message WelcomeResponse{
