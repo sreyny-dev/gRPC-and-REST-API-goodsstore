@@ -94,6 +94,11 @@ class DBServiceStub(object):
                 request_serializer=goods__store__pb2.UserSid.SerializeToString,
                 response_deserializer=goods__store__pb2.UserInfo.FromString,
                 _registered_method=True)
+        self.PlaceOrder = channel.unary_unary(
+                '/goodsstore.DBService/PlaceOrder',
+                request_serializer=goods__store__pb2.OrderRequest.SerializeToString,
+                response_deserializer=goods__store__pb2.OrderResponse.FromString,
+                _registered_method=True)
 
 
 class DBServiceServicer(object):
@@ -174,6 +179,13 @@ class DBServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def PlaceOrder(self, request, context):
+        """for orders
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_DBServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -236,6 +248,11 @@ def add_DBServiceServicer_to_server(servicer, server):
                     servicer.GetUserBySid,
                     request_deserializer=goods__store__pb2.UserSid.FromString,
                     response_serializer=goods__store__pb2.UserInfo.SerializeToString,
+            ),
+            'PlaceOrder': grpc.unary_unary_rpc_method_handler(
+                    servicer.PlaceOrder,
+                    request_deserializer=goods__store__pb2.OrderRequest.FromString,
+                    response_serializer=goods__store__pb2.OrderResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -562,6 +579,33 @@ class DBService(object):
             '/goodsstore.DBService/GetUserBySid',
             goods__store__pb2.UserSid.SerializeToString,
             goods__store__pb2.UserInfo.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def PlaceOrder(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/goodsstore.DBService/PlaceOrder',
+            goods__store__pb2.OrderRequest.SerializeToString,
+            goods__store__pb2.OrderResponse.FromString,
             options,
             channel_credentials,
             insecure,

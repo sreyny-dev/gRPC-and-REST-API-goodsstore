@@ -304,7 +304,40 @@ def update_product(product_id):
         return jsonify({'error': f"gRPC error: {e.details()}"}), e.code().value[0]
 
 
+@app.route("/api/v1/orders/place", methods=["POST"])
+@jwt_required
+def place_order():
+    data = request.json
 
+    # Validate input
+    user_id = data.get('user_id')
+    product_id = data.get('product_id')
+    quantity = data.get('quantity')
+
+    if not user_id or not product_id or not quantity:
+        return jsonify({'error': 'Missing required fields: user_id, product_id, quantity'}), 400
+
+    # Construct the gRPC request
+    order_request = goods_store_pb2.OrderRequest(
+        user_id=user_id,
+        product_id=product_id,
+        quantity=quantity
+    )
+
+    try:
+        # Call the gRPC PlaceOrder method
+        order_response = stub.PlaceOrder(order_request)
+
+        return jsonify({
+            'order_id': order_response.order_id,
+            'user_id': order_response.user_id,
+            'product_id': order_response.product_id,
+            'quantity': order_response.quantity,
+            'total_price': order_response.total_price
+        }), 201
+
+    except grpc.RpcError as e:
+        return jsonify({'error': f"gRPC error: {e.details()}"}), e.code().value[0]
 
 if __name__ == "__main__":
     app.run(port=8080)

@@ -539,6 +539,64 @@ class DBService(goods_store_pb2_grpc.DBServiceServicer):
             if conn:
                 connection_pool.putconn(conn)
 
+    def PlaceOrder(self, request, context):
+        conn = None
+        try:
+            conn = connection_pool.getconn()
+            cursor = conn.cursor()
+
+            # Check if the user and product exist
+            cursor.execute("SELECT price FROM products WHERE id = %s", (request.product_id,))
+            product_row = cursor.fetchone()
+            if not product_row:
+                context.set_code(grpc.StatusCode.NOT_FOUND)
+                context.set_details("Product not found")
+                return goods_store_pb2.OrderResponse()
+
+            cursor.execute("SELECT id FROM users WHERE id = %s", (request.user_id,))
+            user_row = cursor.fetchone()
+            if not user_row:
+                context.set_code(grpc.StatusCode.NOT_FOUND)
+                context.set_details("User not found")
+                return goods_store_pb2.OrderResponse()
+
+            # Validate quantity
+            if request.quantity <= 0 or request.quantity > 3:
+                context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+                context.set_details("Quantity must be between 1 and 3")
+                return goods_store_pb2.OrderResponse()
+
+            # Calculate total price
+            total_price = product_row[0] * request.quantity
+
+            # Insert the order into the database
+            cursor.execute("""
+                INSERT INTO orders (user_id, product_id, quantity, total_price)
+                VALUES (%s, %s, %s, %s) RETURNING id
+            """, (request.user_id, request.product_id, request.quantity, total_price))
+
+            order_id = cursor.fetchone()[0]
+            conn.commit()
+
+            return goods_store_pb2.OrderResponse(
+                order_id=order_id,
+                user_id=request.user_id,
+                product_id=request.product_id,
+                quantity=request.quantity,
+                total_price=total_price
+            )
+
+        except Exception as e:
+            if conn:
+                connection_pool.putconn(conn)
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(f"Internal server error: {str(e)}")
+            return goods_store_pb2.OrderResponse()
+        finally:
+            if conn:
+                connection_pool.putconn(conn)
+
+
 
 # Start the gRPC server
 def serve():
