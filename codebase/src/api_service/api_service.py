@@ -215,5 +215,42 @@ def deactivate_user(sid):
     except grpc.RpcError as e:
         return jsonify({'error': f"gRPC error: {e.details()}"}), e.code().value[0]
 
+@app.route("/api/v1/products/create", methods=["POST"])
+def create_product():
+    try:
+        data = request.get_json()
+
+        required_fields = ['name', 'description', 'category','price', 'slogan', 'stock']
+        if not all(field in data for field in required_fields):
+            return jsonify({'error': 'Missing required field'}), 400
+
+        grpc_request = goods_store_pb2.CreateProductRequest(
+            name=data.get('name', ''),  # Use sid if provided, or leave empty
+            description=data['description'],
+            category=data['category'],
+            price=data['price'],
+            slogan=data['slogan'],
+            stock=data['stock']
+        )
+        grpc_response = stub.CreateProduct(grpc_request)
+
+        if grpc_response.id:
+            return jsonify({
+                'name': grpc_response.name,
+                'description': grpc_response.description,
+                'category': grpc_response.category,
+                'price': grpc_response.price,
+                'slogan': grpc_response.slogan,
+                'stock': grpc_response.stock
+            }), 201
+        else:
+            return jsonify({'error': 'Failed to create product'}), 500
+
+    except grpc.RpcError as e:
+        return jsonify({'error': e.details()}), e.code().value[0]
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 if __name__ == "__main__":
     app.run(port=8080)

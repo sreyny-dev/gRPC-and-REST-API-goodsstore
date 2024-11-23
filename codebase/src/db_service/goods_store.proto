@@ -5,11 +5,10 @@ package goodsstore;
 service DBService {
   rpc Welcome(Empty) returns (WelcomeResponse);
 
-
   //for Products
   rpc GetProducts (Empty) returns (ProductListResponse);
   rpc GetProductById (ProductId) returns (ProductResponse);
-
+  rpc CreateProduct (CreateProductRequest) returns (ProductResponse);
 
   //for USERS
   rpc CreateUser (CreateUserRequest) returns (UserInfo);
@@ -23,8 +22,18 @@ service DBService {
   //for orders
 
 
-
 }
+
+message CreateProductRequest{
+  string name = 1;
+  string description = 2;
+  string category = 3;
+  double price = 4;
+  string slogan = 5;
+  int32 stock = 6;
+}
+
+
 
 message deactivateRequest{
   string sid = 1;

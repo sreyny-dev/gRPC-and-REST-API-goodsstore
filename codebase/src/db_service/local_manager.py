@@ -354,7 +354,6 @@ class DBService(goods_store_pb2_grpc.DBServiceServicer):
                 # Return the connection back to the pool
                 connection_pool.putconn(conn)
 
-
     def GetUserById(self, request, context):
         conn = None
         try:
@@ -400,7 +399,7 @@ class DBService(goods_store_pb2_grpc.DBServiceServicer):
             cursor = conn.cursor()
 
             cursor.execute("SELECT sid FROM users WHERE sid = %s;",
-            (request.sid,))
+                           (request.sid,))
 
             row = cursor.fetchone()
 
@@ -418,6 +417,50 @@ class DBService(goods_store_pb2_grpc.DBServiceServicer):
         finally:
             if conn:
                 connection_pool.putconn(conn)
+
+    def CreateProduct(self, request, context):
+
+        conn = None
+        try:
+            conn = connection_pool.getconn()
+            cursor = conn.cursor()
+
+            insert_query = """
+                        INSERT INTO products (name, description, category, price, slogan, stock)
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                        RETURNING id, name, description, category, price, slogan, stock
+                        """
+
+            cursor.execute(
+                insert_query,
+                (request.name, request.description, request.category, request.price, request.slogan, request.stock)
+            )
+
+            product_row = cursor.fetchone()
+            conn.commit()
+            cursor.close()
+
+            if product_row:
+                return goods_store_pb2.ProductResponse(
+                    id=product_row[0],
+                    name=product_row[1],
+                    description=product_row[2],
+                    category=product_row[3],
+                    price=product_row[4],
+                    slogan=product_row[5],
+                    stock=product_row[6]
+                )
+            else:
+                context.set_code(grpc.StatusCode.INTERNAL)
+                context.set_details("Failed to create product")
+                return goods_store_pb2.ProductResponse()
+
+        except Exception as e:
+            if conn:
+                connection_pool.putconn(conn)
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(f"Internal server error: {str(e)}")
+            return goods_store_pb2.ProductResponse()
 
 
 # Start the gRPC server

@@ -24,41 +24,43 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11goods_store.proto\x12\ngoodsstore\"2\n\x11UpdateUserRequest\x12\x0b\n\x03sid\x18\x01 \x01(\t\x12\x10\n\x08username\x18\x02 \x01(\t\":\n\x10UserResponseList\x12&\n\x08userList\x18\x01 \x03(\x0b\x32\x14.goodsstore.UserInfo\"8\n\x08UserInfo\x12\x0b\n\x03sid\x18\x01 \x01(\t\x12\x10\n\x08username\x18\x02 \x01(\t\x12\r\n\x05\x65mail\x18\x03 \x01(\t\" \n\x11\x64\x65\x61\x63tivateRequest\x12\x0b\n\x03sid\x18\x01 \x01(\t\"\"\n\x0fWelcomeResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"2\n\x0cLoginRequest\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"-\n\rLoginResponse\x12\r\n\x05token\x18\x01 \x01(\t\x12\r\n\x05\x65rror\x18\x02 \x01(\t\"D\n\x13ProductListResponse\x12-\n\x08products\x18\x01 \x03(\x0b\x32\x1b.goodsstore.ProductResponse\"\x80\x01\n\x0fProductResponse\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\x12\x10\n\x08\x63\x61tegory\x18\x04 \x01(\t\x12\r\n\x05price\x18\x05 \x01(\x02\x12\x0e\n\x06slogan\x18\x06 \x01(\t\x12\r\n\x05stock\x18\x07 \x01(\x05\"\x17\n\tProductId\x12\n\n\x02id\x18\x01 \x01(\x05\"\x14\n\x06UserId\x12\n\n\x02id\x18\x01 \x01(\x05\"\x16\n\x07UserSid\x12\x0b\n\x03sid\x18\x01 \x01(\t\"S\n\x11\x43reateUserRequest\x12\x0b\n\x03sid\x18\x01 \x01(\t\x12\x10\n\x08username\x18\x02 \x01(\t\x12\r\n\x05\x65mail\x18\x03 \x01(\t\x12\x10\n\x08password\x18\x04 \x01(\t\"\x07\n\x05\x45mpty2\x8b\x05\n\tDBService\x12\x39\n\x07Welcome\x12\x11.goodsstore.Empty\x1a\x1b.goodsstore.WelcomeResponse\x12\x41\n\x0bGetProducts\x12\x11.goodsstore.Empty\x1a\x1f.goodsstore.ProductListResponse\x12\x44\n\x0eGetProductById\x12\x15.goodsstore.ProductId\x1a\x1b.goodsstore.ProductResponse\x12\x41\n\nCreateUser\x12\x1d.goodsstore.CreateUserRequest\x1a\x14.goodsstore.UserInfo\x12<\n\x05Login\x12\x18.goodsstore.LoginRequest\x1a\x19.goodsstore.LoginResponse\x12\x41\n\nUpdateUser\x12\x1d.goodsstore.UpdateUserRequest\x1a\x14.goodsstore.UserInfo\x12>\n\x0bGetAllUsers\x12\x11.goodsstore.Empty\x1a\x1c.goodsstore.UserResponseList\x12\x42\n\x0e\x44\x65\x61\x63tivateUser\x12\x1d.goodsstore.deactivateRequest\x1a\x11.goodsstore.Empty\x12\x37\n\x0bGetUserById\x12\x12.goodsstore.UserId\x1a\x14.goodsstore.UserInfo\x12\x39\n\x0cGetUserBySid\x12\x13.goodsstore.UserSid\x1a\x14.goodsstore.UserInfob\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11goods_store.proto\x12\ngoodsstore\"y\n\x14\x43reateProductRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x02 \x01(\t\x12\x10\n\x08\x63\x61tegory\x18\x03 \x01(\t\x12\r\n\x05price\x18\x04 \x01(\x01\x12\x0e\n\x06slogan\x18\x05 \x01(\t\x12\r\n\x05stock\x18\x06 \x01(\x05\" \n\x11\x64\x65\x61\x63tivateRequest\x12\x0b\n\x03sid\x18\x01 \x01(\t\"2\n\x11UpdateUserRequest\x12\x0b\n\x03sid\x18\x01 \x01(\t\x12\x10\n\x08username\x18\x02 \x01(\t\":\n\x10UserResponseList\x12&\n\x08userList\x18\x01 \x03(\x0b\x32\x14.goodsstore.UserInfo\"8\n\x08UserInfo\x12\x0b\n\x03sid\x18\x01 \x01(\t\x12\x10\n\x08username\x18\x02 \x01(\t\x12\r\n\x05\x65mail\x18\x03 \x01(\t\"\"\n\x0fWelcomeResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"2\n\x0cLoginRequest\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"-\n\rLoginResponse\x12\r\n\x05token\x18\x01 \x01(\t\x12\r\n\x05\x65rror\x18\x02 \x01(\t\"D\n\x13ProductListResponse\x12-\n\x08products\x18\x01 \x03(\x0b\x32\x1b.goodsstore.ProductResponse\"\x80\x01\n\x0fProductResponse\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\x12\x10\n\x08\x63\x61tegory\x18\x04 \x01(\t\x12\r\n\x05price\x18\x05 \x01(\x02\x12\x0e\n\x06slogan\x18\x06 \x01(\t\x12\r\n\x05stock\x18\x07 \x01(\x05\"\x17\n\tProductId\x12\n\n\x02id\x18\x01 \x01(\x05\"\x14\n\x06UserId\x12\n\n\x02id\x18\x01 \x01(\x05\"\x16\n\x07UserSid\x12\x0b\n\x03sid\x18\x01 \x01(\t\"S\n\x11\x43reateUserRequest\x12\x0b\n\x03sid\x18\x01 \x01(\t\x12\x10\n\x08username\x18\x02 \x01(\t\x12\r\n\x05\x65mail\x18\x03 \x01(\t\x12\x10\n\x08password\x18\x04 \x01(\t\"\x07\n\x05\x45mpty2\xdb\x05\n\tDBService\x12\x39\n\x07Welcome\x12\x11.goodsstore.Empty\x1a\x1b.goodsstore.WelcomeResponse\x12\x41\n\x0bGetProducts\x12\x11.goodsstore.Empty\x1a\x1f.goodsstore.ProductListResponse\x12\x44\n\x0eGetProductById\x12\x15.goodsstore.ProductId\x1a\x1b.goodsstore.ProductResponse\x12N\n\rCreateProduct\x12 .goodsstore.CreateProductRequest\x1a\x1b.goodsstore.ProductResponse\x12\x41\n\nCreateUser\x12\x1d.goodsstore.CreateUserRequest\x1a\x14.goodsstore.UserInfo\x12<\n\x05Login\x12\x18.goodsstore.LoginRequest\x1a\x19.goodsstore.LoginResponse\x12\x41\n\nUpdateUser\x12\x1d.goodsstore.UpdateUserRequest\x1a\x14.goodsstore.UserInfo\x12>\n\x0bGetAllUsers\x12\x11.goodsstore.Empty\x1a\x1c.goodsstore.UserResponseList\x12\x42\n\x0e\x44\x65\x61\x63tivateUser\x12\x1d.goodsstore.deactivateRequest\x1a\x11.goodsstore.Empty\x12\x37\n\x0bGetUserById\x12\x12.goodsstore.UserId\x1a\x14.goodsstore.UserInfo\x12\x39\n\x0cGetUserBySid\x12\x13.goodsstore.UserSid\x1a\x14.goodsstore.UserInfob\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'goods_store_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_UPDATEUSERREQUEST']._serialized_start=33
-  _globals['_UPDATEUSERREQUEST']._serialized_end=83
-  _globals['_USERRESPONSELIST']._serialized_start=85
-  _globals['_USERRESPONSELIST']._serialized_end=143
-  _globals['_USERINFO']._serialized_start=145
-  _globals['_USERINFO']._serialized_end=201
-  _globals['_DEACTIVATEREQUEST']._serialized_start=203
-  _globals['_DEACTIVATEREQUEST']._serialized_end=235
-  _globals['_WELCOMERESPONSE']._serialized_start=237
-  _globals['_WELCOMERESPONSE']._serialized_end=271
-  _globals['_LOGINREQUEST']._serialized_start=273
-  _globals['_LOGINREQUEST']._serialized_end=323
-  _globals['_LOGINRESPONSE']._serialized_start=325
-  _globals['_LOGINRESPONSE']._serialized_end=370
-  _globals['_PRODUCTLISTRESPONSE']._serialized_start=372
-  _globals['_PRODUCTLISTRESPONSE']._serialized_end=440
-  _globals['_PRODUCTRESPONSE']._serialized_start=443
-  _globals['_PRODUCTRESPONSE']._serialized_end=571
-  _globals['_PRODUCTID']._serialized_start=573
-  _globals['_PRODUCTID']._serialized_end=596
-  _globals['_USERID']._serialized_start=598
-  _globals['_USERID']._serialized_end=618
-  _globals['_USERSID']._serialized_start=620
-  _globals['_USERSID']._serialized_end=642
-  _globals['_CREATEUSERREQUEST']._serialized_start=644
-  _globals['_CREATEUSERREQUEST']._serialized_end=727
-  _globals['_EMPTY']._serialized_start=729
-  _globals['_EMPTY']._serialized_end=736
-  _globals['_DBSERVICE']._serialized_start=739
-  _globals['_DBSERVICE']._serialized_end=1390
+  _globals['_CREATEPRODUCTREQUEST']._serialized_start=33
+  _globals['_CREATEPRODUCTREQUEST']._serialized_end=154
+  _globals['_DEACTIVATEREQUEST']._serialized_start=156
+  _globals['_DEACTIVATEREQUEST']._serialized_end=188
+  _globals['_UPDATEUSERREQUEST']._serialized_start=190
+  _globals['_UPDATEUSERREQUEST']._serialized_end=240
+  _globals['_USERRESPONSELIST']._serialized_start=242
+  _globals['_USERRESPONSELIST']._serialized_end=300
+  _globals['_USERINFO']._serialized_start=302
+  _globals['_USERINFO']._serialized_end=358
+  _globals['_WELCOMERESPONSE']._serialized_start=360
+  _globals['_WELCOMERESPONSE']._serialized_end=394
+  _globals['_LOGINREQUEST']._serialized_start=396
+  _globals['_LOGINREQUEST']._serialized_end=446
+  _globals['_LOGINRESPONSE']._serialized_start=448
+  _globals['_LOGINRESPONSE']._serialized_end=493
+  _globals['_PRODUCTLISTRESPONSE']._serialized_start=495
+  _globals['_PRODUCTLISTRESPONSE']._serialized_end=563
+  _globals['_PRODUCTRESPONSE']._serialized_start=566
+  _globals['_PRODUCTRESPONSE']._serialized_end=694
+  _globals['_PRODUCTID']._serialized_start=696
+  _globals['_PRODUCTID']._serialized_end=719
+  _globals['_USERID']._serialized_start=721
+  _globals['_USERID']._serialized_end=741
+  _globals['_USERSID']._serialized_start=743
+  _globals['_USERSID']._serialized_end=765
+  _globals['_CREATEUSERREQUEST']._serialized_start=767
+  _globals['_CREATEUSERREQUEST']._serialized_end=850
+  _globals['_EMPTY']._serialized_start=852
+  _globals['_EMPTY']._serialized_end=859
+  _globals['_DBSERVICE']._serialized_start=862
+  _globals['_DBSERVICE']._serialized_end=1593
 # @@protoc_insertion_point(module_scope)
