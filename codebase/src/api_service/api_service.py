@@ -128,8 +128,12 @@ def create_user():
             send_log(f"Fail to create user '{data['username']}'")
             return jsonify({'error': 'Failed to create user'}), 500
     except grpc.RpcError as e:
+        error_message = e.details()
+        grpc_status_code = e.code().name
+        send_log(f"error: {grpc_status_code} - {error_message}")
         return jsonify({'error': e.details()}), e.code().value[0]
     except Exception as e:
+        send_log(f"Internal server error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route("/api/v1/users/login", methods=["POST"])
@@ -181,8 +185,11 @@ def login():
 @app.route("/api/v1/users/update/<string:sid>", methods=["PUT"])
 @jwt_required
 def update_user(sid):
+
     data = request.json
     username = data.get('username', '')
+    send_log(f"'{username}' access update user endpoint")
+
 
     if not username:
         return jsonify({'error': 'No field provided to update'}), 400
@@ -194,21 +201,24 @@ def update_user(sid):
     )
     try:
         update_user = stub.UpdateUser(update_request)
-
+        send_log(f"update user '{update_user.sid}' to username '{update_user.username}' successfully")
         return jsonify({
             'sid': update_user.sid,
             'username': update_user.username,
             'email': update_user.email
         }), 200
     except grpc.RpcError as e:
+        error_message = e.details()
+        grpc_status_code = e.code().name
+        send_log(f"error: {grpc_status_code} - {error_message}")
         return jsonify({'error': f"gRPC error: {e.details()}"}), e.code().value[0]
-
-
 
 @app.route("/api/v1/users", methods=["GET"])
 @jwt_required
 def get_users():
     try:
+        username = request.user.get("username")
+        send_log(f"User '{username}' fetching all users")
         # Call the gRPC method
         response = stub.GetAllUsers(goods_store_pb2.Empty())
 
@@ -223,6 +233,7 @@ def get_users():
         ]
         return jsonify(users), 200
     except grpc.RpcError as e:
+
         if e.code() == grpc.StatusCode.NOT_FOUND:
             return jsonify({"error": "Users not found"}), 404
         return jsonify({"error": "Internal server error"}), 500
@@ -231,6 +242,10 @@ def get_users():
 @jwt_required
 def get_user_by_sid(sid):
     try:
+        username = request.user.get("username")
+
+        send_log(f"User '{username}' accessed get user by sid endpoint")
+
         response = stub.GetUserBySid(goods_store_pb2.UserSid(sid=sid))
         user = {
             "sid": response.sid,
@@ -263,8 +278,10 @@ def get_user_by_id(id):
 @jwt_required
 def deactivate_user(sid):
     try:
-        deactivate_request = goods_store_pb2.deactivateRequest(sid=sid)
+        username = request.user.get("username")
+        send_log(f"User '{username}' access deactivate user endpoint")
 
+        deactivate_request = goods_store_pb2.deactivateRequest(sid=sid)
         stub.DeactivateUser(deactivate_request)
         return jsonify({'message': f'user with sid{sid} has been deactivated'}), 200
     except grpc.RpcError as e:
@@ -274,6 +291,9 @@ def deactivate_user(sid):
 @jwt_required
 def create_product():
     try:
+        username = request.user.get("username")
+        send_log(f"User '{username}' access create product endpoint")
+
         data = request.get_json()
 
         required_fields = ['name', 'description', 'category','price', 'slogan', 'stock']
@@ -311,6 +331,8 @@ def create_product():
 @app.route("/api/v1/products/update/<int:product_id>", methods=["PUT"])
 @jwt_required
 def update_product(product_id):
+    username = request.user.get("username")
+    send_log(f"User '{username}' access update product endpoint")
     data = request.json
 
     # Initialize the fields to update
@@ -360,6 +382,9 @@ def update_product(product_id):
 @app.route("/api/v1/orders/place", methods=["POST"])
 @jwt_required
 def place_order():
+    username = request.user.get("username")
+    send_log(f"User '{username}' access place order endpoint")
+
     data = request.json
 
     # Validate input
@@ -396,6 +421,9 @@ def place_order():
 @app.route("/api/v1/orders", methods=["GET"])
 @jwt_required
 def get_all_orders():
+    username = request.user.get("username")
+    send_log(f"User '{username}' access get all order endpoint")
+
     # Construct the gRPC request
     empty_request = goods_store_pb2.Empty()
 
@@ -421,6 +449,9 @@ def get_all_orders():
 @app.route("/api/v1/orders/id/<int:id>", methods=["GET"])
 @jwt_required
 def get_order_by_id(id):
+    username = request.user.get("username")
+    send_log(f"User '{username}' access get order by id endpoint")
+
     try:
         order_id_request = goods_store_pb2.OrderId(id=id)
         response = stub.GetOrderById(order_id_request)
@@ -441,6 +472,11 @@ def get_order_by_id(id):
 @jwt_required
 def get_order_by_user_id(user_id):
     try:
+
+        username = request.user.get("username")
+        send_log(f"User '{username}' access get orders by user endpoint")
+
+
         user_request = goods_store_pb2.UserId(id=user_id)
         order_response_list = stub.GetOrderByUser(user_request)
 

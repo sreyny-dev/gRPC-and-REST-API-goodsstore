@@ -150,6 +150,34 @@ class DBService(goods_store_pb2_grpc.DBServiceServicer):
             conn = connection_pool.getconn()
             cursor = conn.cursor()
 
+            check_sid = "SELECT COUNT(*) FROM users WHERE sid=%s"
+            cursor.execute(check_sid, (request.sid,))
+            sid_count = cursor.fetchone()[0]
+
+            if sid_count > 0:
+                context.set_code(grpc.StatusCode.ALREADY_EXISTS)
+                context.set_details(f"SID '{request.sid}' already exists")
+                return goods_store_pb2.UserInfo()
+
+                # Check if username already exists
+                username_check_query = "SELECT COUNT(*) FROM users WHERE username = %s"
+                cursor.execute(username_check_query, (request.username,))
+                username_count = cursor.fetchone()[0]
+                if username_count > 0:
+                    context.set_code(grpc.StatusCode.ALREADY_EXISTS)
+                    context.set_details(f"Username '{request.username}' already exists")
+                    return goods_store_pb2.UserInfo()
+
+                # Check if email already exists
+                email_check_query = "SELECT COUNT(*) FROM users WHERE email = %s"
+                cursor.execute(email_check_query, (request.email,))
+                email_count = cursor.fetchone()[0]
+                if email_count > 0:
+                    context.set_code(grpc.StatusCode.ALREADY_EXISTS)
+                    context.set_details(f"Email '{request.email}' already exists")
+                    return goods_store_pb2.UserInfo()
+
+
             insert_query = """
             INSERT INTO users (sid, username, email, password_hash)
             VALUES (%s, %s, %s, %s)
