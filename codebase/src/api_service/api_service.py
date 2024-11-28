@@ -1,17 +1,19 @@
+from datetime import datetime
+from flask_jwt_extended import get_jwt_identity
 from flask import Flask, jsonify, request
 import grpc
-import jwt
-import datetime
 
 import sys
 import os
 
 # Add the path to db_service folder
 sys.path.append(os.path.abspath("../db_service"))
-
+sys.path.append(os.path.abspath("../logging_service"))
 import goods_store_pb2
 import goods_store_pb2_grpc
 from local_manager import jwt_required
+import logging_service_pb2
+import logging_service_pb2_grpc
 
 app = Flask(__name__)
 
@@ -19,14 +21,36 @@ app = Flask(__name__)
 channel = grpc.insecure_channel("localhost:50051")
 stub = goods_store_pb2_grpc.DBServiceStub(channel)
 
+logging_chanel = grpc.insecure_channel("localhost:50052")
+logging_stub = logging_service_pb2_grpc.LoggingServiceStub(logging_chanel)
+
+
+def send_log(message):
+    log_message = logging_service_pb2.LogMessage(
+        log=message,
+        service="REST API",
+        timestamp=int(datetime.utcnow().timestamp()),
+    )
+    try:
+        response = logging_stub.StreamLogs(iter([log_message]))
+        if response.status != "SUCCESS":
+            print("Logging service returned a failure status")
+    except grpc.RpcError as e:
+        print(f"Failed to send log: {e}")
+
+
 @app.route("/api/v1")
 def welcome():
+    send_log("Accessed the welcome endpoint")
     return jsonify({"message": "Welcome to the goods store API!"})
 
 @app.route("/api/v1/products", methods=["GET"])
 @jwt_required
 def get_products():
     try:
+        username = request.user.get("username")
+        send_log(f"User '{username}' is fetching all products")
+
         response = stub.GetProducts(goods_store_pb2.Empty())
         products = [
             {
@@ -43,13 +67,20 @@ def get_products():
         return jsonify(products)
     except grpc.RpcError as e:
         if e.code() == grpc.StatusCode.NOT_FOUND:
+            send_log(f"User '{username}' fetched all products, but not found")
             return jsonify({"error: product no found"}), 404
+        send_log("Internal Server Error")
         return jsonify({"error: Internal server error"}), 500
 
 
 @app.route("/api/v1/products/<int:product_id>", methods=["GET"])
+@jwt_required
 def get_product_by_id(product_id):
     try:
+
+        username = request.user.get("username")
+        send_log(f"User '{username}' is fetching product by product id")
+
         response = stub.GetProductById(goods_store_pb2.ProductId(id=product_id))
         product = {
             "id": response.id,
@@ -62,18 +93,21 @@ def get_product_by_id(product_id):
         return jsonify(product)
     except grpc.RpcError as e:
         if e.code() == grpc.StatusCode.NOT_FOUND:
+            send_log(f"User '{username}' is fetching product by product id, product not found")
             return jsonify({"error": "Product not found"}), 404
         return jsonify({"error": "Internal server error"}), 500
-
 
 @app.route("/api/v1/users/create", methods=["POST"])
 def create_user():
     try:
-        data = request.get_json()
 
+        send_log("Create User endpoint is being called")
+        data = request.get_json()
         required_fields = ['username', 'email', 'password']
         if not all(field in data for field in required_fields):
             return jsonify({'error': 'Missing required field'}), 400
+
+
 
         grpc_request = goods_store_pb2.CreateUserRequest(
             sid=data.get('sid', ''),  # Use sid if provided, or leave empty
@@ -84,29 +118,32 @@ def create_user():
         grpc_response = stub.CreateUser(grpc_request)
 
         if grpc_response.sid:
+            send_log(f"User '{data['username']}' is created")
             return jsonify({
                 'sid': grpc_response.sid,
                 'username': grpc_response.username,
                 'email': grpc_response.email
             }), 201
         else:
+            send_log(f"Fail to create user '{data['username']}'")
             return jsonify({'error': 'Failed to create user'}), 500
-
     except grpc.RpcError as e:
         return jsonify({'error': e.details()}), e.code().value[0]
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 
 @app.route("/api/v1/users/login", methods=["POST"])
 def login():
     try:
         data = request.get_json()
 
+        # Check for required fields
         required_fields = ['username', 'password']
         if not all(field in data for field in required_fields):
+            send_log("Missing required fields in login request")
             return jsonify({'error': 'Missing required field'}), 400
 
+        # Send login request to gRPC server
         grpc_request = goods_store_pb2.LoginRequest(
             username=data['username'],
             password=data['password']
@@ -114,16 +151,31 @@ def login():
         grpc_response = stub.Login(grpc_request)
 
         if grpc_response.token:
+            send_log(f"User {data['username']} successfully logged in")
             return jsonify({
                 'token': grpc_response.token
             }), 201
         else:
+            send_log(f"Failed login attempt for user {data['username']}")
             return jsonify({'error': grpc_response.error}), 401
 
     except grpc.RpcError as e:
-        return jsonify({'error': e.details()}), e.code().value[0]
+        # Handle specific gRPC errors
+        if e.code() == grpc.StatusCode.UNAUTHENTICATED:
+            send_log(f"Unauthenticated login attempt for user {data.get('username')}")
+            return jsonify({'error': 'Invalid username or password'}), 401
+        elif e.code() == grpc.StatusCode.INVALID_ARGUMENT:
+            send_log(f"Invalid login request for user {data.get('username')}")
+            return jsonify({'error': 'Invalid login request'}), 400
+        else:
+            # Generic fallback for unexpected gRPC errors
+            send_log("Unexpected gRPC error during login")
+            return jsonify({'error': 'Internal server error'}), 500
+
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        send_log("Internal server error during login")
+        return jsonify({'error': 'Internal server error'}), 500
+
 
 
 @app.route("/api/v1/users/update/<string:sid>", methods=["PUT"])
@@ -219,6 +271,7 @@ def deactivate_user(sid):
         return jsonify({'error': f"gRPC error: {e.details()}"}), e.code().value[0]
 
 @app.route("/api/v1/products/create", methods=["POST"])
+@jwt_required
 def create_product():
     try:
         data = request.get_json()

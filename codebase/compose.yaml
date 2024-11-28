@@ -45,7 +45,6 @@ services:
       - "9092:9092"  # For internal Docker use
       - "9093:9093"  # For external access
 
-
   kafka-topic-creator:
     image: confluentinc/cp-kafka:7.7.1
     depends_on:
@@ -54,6 +53,7 @@ services:
       bash -c "
       /bin/kafka-topics --create --topic log-channel --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1;
       "
+
 
 volumes:
   pg_data:  # A placeholder volume without any configuration
