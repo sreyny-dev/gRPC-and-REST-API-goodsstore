@@ -25,6 +25,7 @@ service DBService {
   rpc GetOrderById(OrderId) returns (OrderResponse);
   rpc GetAllOrder(Empty) returns (OrderResponseList);
   rpc GetOrderByUser(UserId) returns (OrderResponseList);
+  rpc CancelOrderById(OrderId) returns (Empty);
 
 }
 

@@ -1,1 +1,6 @@
+Flask==2.3.2
+grpcio==1.66.2
 psycopg2-binary==2.9.10
+bcrypt==4.0.1
+pyjwt==2.5.0
+protobuf==5.28.3

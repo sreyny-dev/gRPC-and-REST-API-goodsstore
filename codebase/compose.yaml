@@ -16,6 +16,9 @@ services:
       - pg_data:/var/lib/postgresql/data        # default PGDATA location: /var/lib/postgresql/data
       - ./db-init:/docker-entrypoint-initdb.d   # init run all scripts by default in: /docker-entrypoint-initdb.d
 
+    networks:
+      example_network:
+
   # kafka message queue with zookeeper config management
   zookeeper:
     # https://hub.docker.com/r/confluentinc/cp-zookeeper
@@ -25,6 +28,8 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      example_network:
 
   kafka:
     # https://hub.docker.com/r/confluentinc/cp-kafka
@@ -44,6 +49,9 @@ services:
     ports:
       - "9092:9092"  # For internal Docker use
       - "9093:9093"  # For external access
+    networks:
+      example_network:
+
 
   kafka-topic-creator:
     image: confluentinc/cp-kafka:7.7.1
@@ -53,8 +61,70 @@ services:
       bash -c "
       /bin/kafka-topics --create --topic log-channel --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1;
       "
+    networks:
+      example_network:
 
+
+  api-service:
+      build:
+        context: ./src/api_service
+      container_name: api-service
+      environment:
+        FLASK_APP: api_service.py
+        FLASK_ENV: test
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        POSTGRES_DB: ${POSTGRES_DB}
+        POSTGRES_HOST: postgres
+        POSTGRES_PORT: 5432
+        FLASK_RUN_PORT: 8081
+      ports:
+        - "8081:8081"
+      depends_on:
+        - postgres
+        - kafka
+      networks:
+        example_network:
+
+  db-service:
+    build:
+      context: ./src/db_service
+    container_name: db-service
+    environment:
+      FLASK_APP: local_manager.py
+      FLASK_ENV: test
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      FLASK_RUN_PORT: 50051
+    ports:
+      - "50051:50051"
+    depends_on:
+      - postgres
+    networks:
+      example_network:
+  logging-service:
+    build:
+      context: ./src/logging_service
+    container_name: logging-service
+    environment:
+      FLASK_APP: local_publisher.py
+      FLASK_ENV: test
+      FLASK_RUN_PORT: 50052
+    ports:
+      - "50052:50052"
+    depends_on:
+      - api-service
+      - kafka
+    networks:
+      example_network:
 
 volumes:
   pg_data:  # A placeholder volume without any configuration
 
+networks:
+  example_network:
+    driver: bridge
+    external: false

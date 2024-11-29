@@ -1,27 +1,29 @@
-# Use Python 3.10 Alpine as the base image
-FROM python:3.10-alpine
+# Base image
+FROM python:3.10-slim
 
-# Set the working directory inside the container
+# Set working directory
 WORKDIR /api
 
-# Set environment variables for Flask
-ENV FLASK_APP=api_service.py
-ENV FLASK_RUN_HOST=0.0.0.0
+# Install build dependencies and PostgreSQL development libraries
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev
 
-# Install dependencies for Python and gRPC compilation
-RUN apk add --no-cache gcc musl-dev linux-headers
+# Copy requirements file
+COPY requirements.txt .
 
-# Copy the requirements file into the container
-COPY requirements.txt requirements.txt
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install Python dependencies
-RUN pip install -r requirements.txt
-
-# Expose port 8081 for the Flask application
-EXPOSE 8081
-
-# Copy the entire application code into the container
+# Copy application code
 COPY . .
 
-# Run the Flask application in debug mode
-CMD ["flask", "run", "--debug"]
+# Expose port
+EXPOSE 8081
+
+# Environment variables
+ENV FLASK_APP=api_service.py
+ENV FLASK_ENV=test
+
+# Command to run the application
+CMD ["flask", "run", "--host=0.0.0.0"]

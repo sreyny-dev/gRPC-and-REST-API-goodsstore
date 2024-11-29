@@ -1,5 +1,4 @@
 from datetime import datetime
-from flask_jwt_extended import get_jwt_identity
 from flask import Flask, jsonify, request
 import grpc
 
@@ -7,8 +6,8 @@ import sys
 import os
 
 # Add the path to db_service folder
-sys.path.append(os.path.abspath("../db_service"))
-sys.path.append(os.path.abspath("../logging_service"))
+# sys.path.append(os.path.abspath("../db_service"))
+# sys.path.append(os.path.abspath("../logging_service"))
 import goods_store_pb2
 import goods_store_pb2_grpc
 from local_manager import jwt_required
@@ -18,10 +17,10 @@ import logging_service_pb2_grpc
 app = Flask(__name__)
 
 # Connect to the gRPC DB service
-channel = grpc.insecure_channel("localhost:50051")
+channel = grpc.insecure_channel("db-service:50051")
 stub = goods_store_pb2_grpc.DBServiceStub(channel)
 
-logging_chanel = grpc.insecure_channel("localhost:50052")
+logging_chanel = grpc.insecure_channel("logging-service:50052")
 logging_stub = logging_service_pb2_grpc.LoggingServiceStub(logging_chanel)
 
 
@@ -494,6 +493,22 @@ def get_order_by_user_id(user_id):
         if e.code() == grpc.StatusCode.NOT_FOUND:
             return jsonify({"error": "Order not found"}), 404
         return jsonify({"error": "Internal Server Error"}), 500
+
+@app.route("/api/v1/orders/cancel/<int:id>", methods=["PUT"])
+@jwt_required
+def cancel_order(id):
+    try:
+        username = request.user.get("username")
+        send_log(f"User '{username}' access cancel order endpoint")
+
+        cancel_request = goods_store_pb2.OrderId(id=id)
+        stub.CancelOrderById(cancel_request)
+        return jsonify({'message': f'order with id={id} has been canceled'}), 200
+    except grpc.RpcError as e:
+        return jsonify({'error': f"gRPC error: {e.details()}"}), e.code().value[0]
+
+
+
 
 
 if __name__ == "__main__":
