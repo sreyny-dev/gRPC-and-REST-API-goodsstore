@@ -24,6 +24,7 @@ DB_CONFIG = {
     "password": "dncc",
     # "host": "localhost",
     "host": "postgres",
+    # "port": "1111",
     "port": "5432",
 }
 
@@ -549,7 +550,7 @@ class DBService(goods_store_pb2_grpc.DBServiceServicer):
                     name=product_row[1],
                     description=product_row[2],
                     category=product_row[3],
-                    price=round(product_row[4], 2),
+                    price=product_row[4],
                     slogan=product_row[5],
                     stock=product_row[6]
                 )
