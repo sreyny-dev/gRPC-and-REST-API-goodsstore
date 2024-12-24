@@ -1,8 +1,8 @@
-import time
-from datetime import datetime
-from confluent_kafka import Producer
 import grpc
 from concurrent import futures
+import logging
+from datetime import datetime
+from confluent_kafka import Producer
 import logging_service_pb2
 import logging_service_pb2_grpc
 
@@ -10,40 +10,37 @@ import logging_service_pb2_grpc
 producer = Producer({'bootstrap.servers': 'kafka:9092'})
 topic = 'log-channel'
 
+# Set up logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(message)s')
+logger = logging.getLogger()
 
 class LoggingService(logging_service_pb2_grpc.LoggingServiceServicer):
-  def StreamLogs(self, request_iterator, context):
-    """Receive log messages via gRPC and produce them to Kafka"""
-    for log_message in request_iterator:
-      try:
-        # Construct the log message
-        msg = f"{log_message.timestamp} - {log_message.service}: {log_message.log}"
-
-        # Produce the message to Kafka
-        producer.produce(topic, msg.encode('utf-8'))
-        producer.flush()
-
-        print(f"Produced message to Kafka: {msg}")
-      except Exception as e:
-        print(f"Error producing message to Kafka: {e}")
-        return logging_service_pb2.LogResponse(status="FAILURE")
-
-    # Respond to the gRPC client after processing
-    return logging_service_pb2.LogResponse(status="SUCCESS")
+    def StreamLogs(self, request_iterator, context):
+        """Process incoming log messages and send them to Kafka"""
+        try:
+            for log_message in request_iterator:
+                # Serialize and send each message
+                serialized_message = log_message.SerializeToString()
+                producer.produce(topic, value=serialized_message)
+                logger.info(f"Sent log message to Kafka: {log_message}")
+            producer.flush()
+            return logging_service_pb2.LogResponse(status="SUCCESS")
+        except Exception as e:
+            logger.error(f"Failed to send logs: {e}")
+            return logging_service_pb2.LogResponse(status="FAILURE")
 
 
 def serve():
-  """Start the gRPC server"""
-  server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-  logging_service_pb2_grpc.add_LoggingServiceServicer_to_server(LoggingService(), server)
-  server.add_insecure_port('[::]:50052')  # Change port if necessary
-  print("Logging service is running on port 50052...")
-  server.start()
-  try:
-    server.wait_for_termination()
-  except KeyboardInterrupt:
-    print("\nLogging service shutting down...")
-
+    """Start the gRPC server"""
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    logging_service_pb2_grpc.add_LoggingServiceServicer_to_server(LoggingService(), server)
+    server.add_insecure_port('[::]:50052')  # Change port if necessary
+    logger.info("Logging service is running on port 50052...")
+    server.start()
+    try:
+        server.wait_for_termination()
+    except KeyboardInterrupt:
+        logger.info("Logging service shutting down...")
 
 if __name__ == "__main__":
-  serve()
+    serve()

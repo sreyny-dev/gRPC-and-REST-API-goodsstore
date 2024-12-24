@@ -1,7 +1,9 @@
-from datetime import datetime
+import time
 from flask import Flask, jsonify, request
 import grpc
+import logging
 
+# Ensure Flask writes all logs to stdout
 import sys
 import os
 
@@ -15,32 +17,43 @@ import logging_service_pb2
 import logging_service_pb2_grpc
 
 app = Flask(__name__)
+app.logger.setLevel(logging.DEBUG)  # Set the logging level to DEBUG
+app.logger.addHandler(logging.StreamHandler(sys.stdout))
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(message)s')
+logger = logging.getLogger()
 
 # Connect to the gRPC DB service
 channel = grpc.insecure_channel("db-service:50051")
+# channel = grpc.insecure_channel("localhost:50051")
 stub = goods_store_pb2_grpc.DBServiceStub(channel)
 
 logging_chanel = grpc.insecure_channel("logging-service:50052")
+# logging_chanel = grpc.insecure_channel("localhost:50052")
 logging_stub = logging_service_pb2_grpc.LoggingServiceStub(logging_chanel)
 
 
 def send_log(message):
-    log_message = logging_service_pb2.LogMessage(
-        log=message,
-        service="REST API",
-        timestamp=int(datetime.utcnow().timestamp()),
-    )
     try:
-        response = logging_stub.StreamLogs(iter([log_message]))
-        if response.status != "SUCCESS":
-            print("Logging service returned a failure status")
-    except grpc.RpcError as e:
-        print(f"Failed to send log: {e}")
+        log_message = logging_service_pb2.LogMessage(
+            log=message,
+            service="API Service",
+            timestamp=int(time.time())  # Convert timestamp to Unix epoch seconds
+        )
+        # Send a stream of log messages to the Logging Service
+        logging_stub.StreamLogs(iter([log_message]))  # Use `iter([log_message])` to send a list of one message at a time
+        app.logger.debug("Sent log message to logging service!")
+    except Exception as e:
+        app.logger.error(f"Failed to send log to logging service: {str(e)}")
 
 
 @app.route("/api/v1")
 def welcome():
-    send_log("Accessed the welcome endpoint")
+    """Handle welcome route"""
+    message = "Accessed the welcome endpoint"
+    send_log(message)  # Send log to logging service
+    app.logger.debug(message)  # Also log locally
     return jsonify({"message": "Welcome to the goods store API!"})
 
 @app.route("/api/v1/products", methods=["GET"])
@@ -512,4 +525,6 @@ def cancel_order(id):
 
 
 if __name__ == "__main__":
-    app.run(port=8080)
+    # app.run(port=8080)
+    app.run(debug=True, host='0.0.0.0', port=8081)
+
