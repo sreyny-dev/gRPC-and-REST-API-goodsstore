@@ -16,7 +16,7 @@ This project involves the development of an online SUSTech Merch Store, where ex
 
 The system architecture consists of the following components:
 
-![Architecture Diagram](\img\archi.png)
+![Architecture Diagram](/img/archi.png)
 
 1. **RESTful API Service**: Handles external customer requests, including product browsing, user management, and order placement.
 2. **gRPC DB Service**: Manages database operations, including CRUD operations for products, users, and orders. It maintains a connection pool to optimize database access.
